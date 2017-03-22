@@ -1,0 +1,28 @@
+diff --git a/xbmc/Application.cpp b/xbmc/Application.cpp
+index b8ff91b427..b5fee706eb 100644
+--- a/xbmc/Application.cpp
++++ b/xbmc/Application.cpp
+@@ -2932,6 +2932,9 @@ void CApplication::Stop(int exitCode)
+     CLog::Log(LOGNOTICE, "stop player");
+     m_pPlayer->ClosePlayer();
+ 
++    CLog::Log(LOGNOTICE, "set wakeup");
++    g_PVRManager.SetWakeupCommand();
++
+     StopServices();
+ 
+ #ifdef HAS_ZEROCONF
+diff --git a/xbmc/pvr/PVRManager.cpp b/xbmc/pvr/PVRManager.cpp
+index 52a8e1b671..18f8fbdd32 100644
+--- a/xbmc/pvr/PVRManager.cpp
++++ b/xbmc/pvr/PVRManager.cpp
+@@ -493,9 +493,6 @@ void CPVRManager::Unload()
+ 
+ void CPVRManager::Shutdown()
+ {
+-  // set system wakeup data
+-  SetWakeupCommand();
+-
+   Unload();
+ 
+   // release addons
