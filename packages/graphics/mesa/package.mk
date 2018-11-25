@@ -85,3 +85,6 @@ else
   PKG_MESON_OPTS_TARGET+=" -Dgles1=false -Dgles2=false"
 fi
 
+if [ "${BUILD_WITH_DEBUG}" != "yes" ]; then
+  PKG_MESON_OPTS_TARGET+=" -Db_ndebug=true"
+fi
