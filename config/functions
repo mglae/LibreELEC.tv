@@ -1125,6 +1125,24 @@ kernel_config_path() {
   die "ERROR: Unable to locate kernel config for ${LINUX} - looking for ${config_name}"
 }
 
+kernel_initramfs_conf() {
+  local cfg pkg_linux_dir config_name confs
+
+  pkg_linux_dir="$(get_pkg_directory linux)"
+
+  config_name="initramfs.${TARGET_PATCH_ARCH:-$TARGET_ARCH}.conf"
+
+  for cfg in $pkg_linux_dir/config/initramfs.conf \
+             $PROJECT_DIR/$PROJECT/linux/$config_name \
+             $PROJECT_DIR/$PROJECT/devices/$DEVICE/linux/$config_name \
+             ; do
+    [[ $cfg =~ /devices//linux/ ]] && continue
+    [ -f "$cfg" ] && confs+="$cfg "
+  done
+
+  [ -n "$confs" ] && echo "$confs" || true
+}
+
 kernel_make() {
   (
     setup_pkg_config_host

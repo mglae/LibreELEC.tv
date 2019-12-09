@@ -67,7 +67,7 @@ fi
 post_patch() {
   cp $PKG_KERNEL_CFG_FILE $PKG_BUILD/.config
 
-  sed -i -e "s|@INITRAMFS_SOURCE@|$BUILD/image/initramfs.cpio|" $PKG_BUILD/.config
+  sed -i -e "s|@INITRAMFS_SOURCE@|$(kernel_initramfs_conf)$BUILD/initramfs|" $PKG_BUILD/.config
 
   # set default hostname based on $DISTRONAME
     sed -i -e "s|@DISTRONAME@|$DISTRONAME|g" $PKG_BUILD/.config
@@ -130,8 +130,6 @@ makeinstall_host() {
 
 pre_make_target() {
   ( cd $ROOT
-    rm -rf $BUILD/initramfs
-    rm -f ${STAMPS_INSTALL}/initramfs/install_target ${STAMPS_INSTALL}/*/install_init
     $SCRIPTS/install initramfs
   )
   pkg_lock_status "ACTIVE" "linux:target" "build"
