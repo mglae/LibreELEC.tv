@@ -1,0 +1,15 @@
+[Unit]
+Description=LibreELEC trigger for early root shell FOR DEBUGGING ONLY
+DefaultDependencies=no
+IgnoreOnIsolate=yes
+ConditionKernelCommandLine=|tty
+ConditionKernelCommandLine=|debugging
+ConditionPathExists=|/storage/.cache/debug.libreelec
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl start debug-shell.service
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target
