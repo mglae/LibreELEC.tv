@@ -1,0 +1,89 @@
+diff -Naur open-iscsi-bf39941/Makefile open-iscsi-bf39941.patch/Makefile
+--- a/Makefile	2013-08-08 17:06:46.000000000 +0200
++++ b/Makefile	2013-08-08 18:02:13.009068581 +0200
+@@ -19,7 +19,7 @@
+ MANPAGES = doc/iscsid.8 doc/iscsiadm.8 doc/iscsi_discovery.8 \
+ 		iscsiuio/docs/iscsiuio.8 doc/iscsi_fw_login.8 doc/iscsi-iname.8 \
+ 		doc/iscsistart.8
+-PROGRAMS = usr/iscsid usr/iscsiadm utils/iscsi-iname iscsiuio/src/unix/iscsiuio \
++PROGRAMS =  \
+ 		   usr/iscsistart
+ SCRIPTS = utils/iscsi_discovery utils/iscsi_fw_login utils/iscsi_offload \
+ 		  utils/iscsi-gen-initiatorname
+@@ -58,20 +58,15 @@
+ 
+ all: user
+ 
+-user: iscsiuio/Makefile
++user:
+ 	$(MAKE) -C libopeniscsiusr
+ 	$(MAKE) -C utils/sysdeps
+ 	$(MAKE) -C utils/fwparam_ibft
+ 	$(MAKE) -C usr
+-	$(MAKE) -C utils
+-	$(MAKE) -C iscsiuio
+ 	@echo
+ 	@echo "Compilation complete                 Output file"
+ 	@echo "-----------------------------------  ----------------"
+-	@echo "Built iSCSI daemon:                  usr/iscsid"
+-	@echo "Built management application:        usr/iscsiadm"
+ 	@echo "Built boot tool:                     usr/iscsistart"
+-	@echo "Built iscsiuio daemon:               iscsiuio/src/unix/iscsiuio"
+-	@echo "Built libopeniscsiusr library:       libopeniscsiusr/libopeniscsiusr.so"
++	@echo "Built libopeniscsiusr library:       libopeniscsiusr/libopeniscsiusr.a"
+ 	@echo
+ 	@echo "Read README file for detailed information."
+--- a/usr/Makefile	2020-12-18 19:58:08.000000000 +0100
++++ b/usr/Makefile	2021-01-27 23:45:09.705856937 +0100
+@@ -39,12 +39,11 @@ WARNFLAGS ?= -Wall -Wextra -Werror -Wstr
+ CFLAGS += $(WARNFLAGS) -I../include -I. -D_GNU_SOURCE \
+ 	  -I$(TOPDIR)/libopeniscsiusr
+ CFLAGS += $(shell $(PKG_CONFIG) --cflags libkmod)
+-ISCSI_LIB = -L$(TOPDIR)/libopeniscsiusr -lopeniscsiusr
++ISCSI_LIB = -L$(TOPDIR)/libopeniscsiusr -l:libopeniscsiusr.a
+-LDFLAGS += $(shell $(PKG_CONFIG) --libs libkmod)
+ ifeq ($(NO_SYSTEMD),)
+ LDFLAGS += $(shell $(PKG_CONFIG) --libs libsystemd)
+ endif
+-PROGRAMS = iscsid iscsiadm iscsistart
++PROGRAMS = iscsistart
+ 
+ # libc compat files
+ SYSDEPS_SRCS = $(sort $(wildcard ../utils/sysdeps/*.o))
+@@ -74,7 +74,7 @@ iscsiadm: $(ISCSI_LIB_SRCS) $(DISCOVERY_
+ 
+ iscsistart: $(ISCSI_LIB_SRCS) $(INITIATOR_SRCS) $(FW_BOOT_SRCS) \
+ 		iscsistart.o statics.o
+-	$(CC) $(CFLAGS) $^ -o $@ -lcrypto -lrt $(LDFLAGS) $(ISCSI_LIB)
++	$(CC) $(CFLAGS) $^ -o $@ -lrt $(LDFLAGS) $(ISCSI_LIB) -l:libcrypto.a -lpthread -ldl
+ clean:
+ 	rm -f *.o $(PROGRAMS) .depend $(LIBSYS)
+ 
+--- a/libopeniscsiusr/Makefile	2021-01-27 23:16:32.091475804 +0100
++++ b/libopeniscsiusr/Makefile	2021-01-27 23:20:42.625886131 +0100
+@@ -30,8 +30,8 @@ LIBISCSI_USR_DIR=$(TOPDIR)/libopeniscsiu
+ LIBISCSI_USR_VERSION_MAJOR=0
+ LIBISCSI_USR_VERSION=0.2.0
+ SONAME=$(LIBISCSI_USR_VERSION)
+-DEVLIB = libopeniscsiusr.so
+-LIBS = $(DEVLIB).$(SONAME)
++DEVLIB = libopeniscsiusr.a
++LIBS = $(DEVLIB)
+ LIBS_MAJOR = $(DEVLIB).$(LIBISCSI_USR_VERSION_MAJOR)
+ PKGFILE = libopeniscsiusr.pc
+ HEADERS = libopeniscsiusr/libopeniscsiusr.h \
+@@ -52,12 +52,11 @@ LDFLAGS += $(shell $(PKG_CONFIG) --libs
+ 
+ LIBADD =
+ 
+-all: $(LIBS) $(LIBS_MAJOR)
++all: $(LIBS)
+ 
+ $(LIBS): $(OBJS)
+ 	@echo CFLAGS= $(CFLAGS)
+-	$(CC) $(CFLAGS) -shared -Wl,-soname=$@ -o $@ $(OBJS) $(LDFLAGS) $(LIBADD)
+-	ln -sf $@ $(DEVLIB)
++	$(AR) rcs $@ $(OBJS)
+ 
+ $(LIBS_MAJOR): $(LIBS)
+ 	ln -sf $(LIBS) $@
