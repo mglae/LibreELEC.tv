@@ -1,3 +1,8 @@
+114
+- at-spi2-core: update to 2.46.0
+- chrome: update to 107.0.5304.87
+- libXft: update to 2.3.6
+
 113
 - at-spi2-core: update to 2.45.1
 - atk: update to 2.38.0
